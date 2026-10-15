@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Im Deutschkurs — тренажёр слов</title>
+<style>
+:root{--ink:#183153;--blue:#dff4ff;--blue2:#a8e4f7;--cream:#fff5d9;--green:#e8f8df;--pink:#ffe8ef;--line:#d8e4ed;--accent:#277da1}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#f3fbff,#fffaf0);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+main{max-width:1000px;margin:auto;padding:24px 16px 48px}header{text-align:center;margin-bottom:20px}h1{margin:0;font-size:clamp(1.7rem,4vw,2.6rem);letter-spacing:.02em}header p{margin:8px 0;color:#4d657d}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0}.tab,button,select{font:inherit;border:1px solid #c7d8e5;border-radius:12px;padding:10px 15px;background:white;color:var(--ink);cursor:pointer}.tab[aria-selected="true"]{background:var(--ink);color:white;border-color:var(--ink)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:clamp(16px,3vw,28px);box-shadow:0 8px 28px #17324b0d}.hidden{display:none!important}
+.controls{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin:12px 0 18px}.controls label{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card-wrap{perspective:1000px;max-width:620px;margin:20px auto}.flashcard{min-height:260px;width:100%;border:0;padding:0;background:transparent;perspective:1000px}.card-inner{min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .45s}.flashcard.flipped .card-inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px;border-radius:22px;backface-visibility:hidden;border:2px solid #c8e9f5;background:var(--blue)}.face.back{transform:rotateY(180deg);background:var(--cream);border-color:#f0d79a}.face .small{font-size:.9rem;color:#58718a;margin-bottom:12px}.word{font-size:clamp(1.6rem,5vw,2.6rem);font-weight:750;line-height:1.2}.hint{margin-top:16px;color:#526a7d;font-size:.95rem}.counter{text-align:center;color:#61758a;font-variant-numeric:tabular-nums}
+#matchingBoard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.match-col{display:grid;gap:10px;align-content:start}.match-btn{min-height:64px;text-align:left;white-space:normal;background:#f9fcff;border:2px solid var(--line);line-height:1.3}.match-btn.selected{border-color:var(--accent);background:#e5f7ff}.match-btn.matched{border-color:#72b879;background:#e9f8e7;opacity:.78;cursor:default}.match-btn.wrong{border-color:#e78b8b;background:#fff0f0}.status{text-align:center;min-height:28px;margin-top:14px;font-weight:650}.progress{height:9px;background:#e8eef3;border-radius:99px;overflow:hidden;margin:12px 0}.progress span{display:block;height:100%;width:0;background:#64b77b;transition:width .2s}.section-note{color:#60748a;font-size:.95rem;text-align:center}.tag{display:inline-block;background:#eef7ff;border-radius:99px;padding:5px 10px;font-size:.85rem;margin:3px}
+@media(max-width:560px){main{padding:16px 10px 30px}.panel{padding:14px}.face{padding:18px;min-height:230px}.flashcard,.card-inner{min-height:230px}#matchingBoard{gap:7px}.match-btn{padding:9px;min-height:66px;font-size:.9rem}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>IM DEUTSCHKURS</h1>
+<p>Интерактивный тренажёр немецкой лексики · A1</p>
+<div><span class="tag">Карточки</span><span class="tag">Matching</span><span class="tag">Deutsch → Русский</span></div>
+</header>
+<nav class="tabs" aria-label="Режим тренировки">
+<button class="tab" id="tabCards" aria-selected="true">🃏 Флэш-карточки</button>
+<button class="tab" id="tabMatch" aria-selected="false">🔗 Matching</button>
+</nav>
+<section class="panel" id="cardsPanel">
+<div class="controls">
+<label>Набор:
+<select id="cardCategory"><option value="all">Все слова и фразы</option><option value="nouns">Слова (существительные)</option><option value="commands">Команды преподавателя</option><option value="help">Просьба о помощи</option></select></label>
+<label><input type="checkbox" id="reverseCards"> Сначала русский</label>
+</div>
+<div class="card-wrap">
+<button class="flashcard" id="flashcard" aria-label="Перевернуть карточку">
+<div class="card-inner">
+<div class="face front"><div class="small" id="frontLabel">Немецкий</div><div class="word" id="frontWord"></div><div class="hint">Нажмите на карточку, чтобы увидеть перевод</div></div>
+<div class="face back"><div class="small" id="backLabel">Русский</div><div class="word" id="backWord"></div><div class="hint" id="extraHint"></div></div>
+</div>
+</button>
+</div>
+<div class="counter" id="cardCounter"></div>
+<div class="controls">
+<button id="prevCard">← Назад</button><button id="shuffleCards">🔀 Перемешать</button><button id="nextCard">Дальше →</button>
+</div>
+<p class="section-note">Попробуйте вспомнить перевод до того, как перевернёте карточку.</p>
+</section>
+<section class="panel hidden" id="matchPanel">
+<div class="controls">
+<label>Набор:
+<select id="matchCategory"><option value="all">Все слова и фразы</option><option value="nouns">Слова (существительные)</option><option value="commands">Команды преподавателя</option><option value="help">Просьба о помощи</option></select></label>
+<button id="newMatch">Новая игра ↻</button>
+</div>
+<p class="section-note">Выберите немецкое слово, затем соответствующий русский перевод.</p>
+<div class="progress"><span id="progressBar"></span></div>
+<div class="counter" id="matchCounter"></div>
+<div id="matchingBoard"><div class="match-col" id="germanCol"></div><div class="match-col" id="russianCol"></div></div>
+<div class="status" id="matchStatus" aria-live="polite"></div>
+</section>
+</main>
+<script>
+const vocab = [
+{de:"die Tabelle",ru:"таблица",cat:"nouns"},
+{de:"der Buchstabe",ru:"буква",cat:"nouns"},
+{de:"die Zahl",ru:"цифра; число",cat:"nouns"},
+{de:"das Foto",ru:"фотография",cat:"nouns"},
+{de:"das Gespräch",ru:"разговор; беседа",cat:"nouns"},
+{de:"der Satz",ru:"предложение",cat:"nouns"},
+{de:"das Wort",ru:"слово",cat:"nouns"},
+{de:"die Gruppe",ru:"группа",cat:"nouns"},
+{de:"die Kursleiterin",ru:"преподавательница; руководительница курса",cat:"nouns"},
+{de:"die Partnerin",ru:"партнёрша (по заданию)",cat:"nouns"},
+{de:"das Kärtchen",ru:"карточка",cat:"nouns"},
+{de:"der Brief",ru:"письмо",cat:"nouns"},
+{de:"das Bild",ru:"картинка; изображение",cat:"nouns"},
+{de:"die Übung",ru:"упражнение",cat:"nouns"},
+{de:"der Text",ru:"текст",cat:"nouns"},
+{de:"Sprechen Sie.",ru:"Говорите.",cat:"commands"},
+{de:"Schreiben Sie.",ru:"Пишите.",cat:"commands"},
+{de:"Lesen Sie.",ru:"Читайте.",cat:"commands"},
+{de:"Hören Sie.",ru:"Слушайте.",cat:"commands"},
+{de:"Arbeiten Sie zu zweit / in der Gruppe.",ru:"Работайте вдвоём / в группе.",cat:"commands"},
+{de:"Fragen und antworten Sie.",ru:"Задавайте вопросы и отвечайте.",cat:"commands"},
+{de:"Zeigen Sie.",ru:"Покажите.",cat:"commands"},
+{de:"Ergänzen Sie.",ru:"Дополните; вставьте.",cat:"commands"},
+{de:"Kreuzen Sie an.",ru:"Отметьте галочкой.",cat:"commands"},
+{de:"Ordnen Sie zu.",ru:"Соотнесите; распределите.",cat:"commands"},
+{de:"Markieren Sie.",ru:"Выделите (маркером).",cat:"commands"},
+{de:"Zeichnen Sie.",ru:"Нарисуйте.",cat:"commands"},
+{de:"Ich verstehe das nicht.",ru:"Я этого не понимаю.",cat:"help"},
+{de:"Wie schreibt man das?",ru:"Как это пишется?",cat:"help"},
+{de:"Was heißt das?",ru:"Что это значит?",cat:"help"},
+{de:"Wie spricht man das aus?",ru:"Как это произносится?",cat:"help"},
+{de:"Was sollen wir tun?",ru:"Что нам делать?",cat:"help"},
+{de:"Bitte helfen Sie mir.",ru:"Пожалуйста, помогите мне.",cat:"help"}
+];
+const $=id=>document.getElementById(id);
+let deck=[],idx=0,matchItems=[],selected=null,matched=new Set(),mistakes=0;
+function filtered(cat){return vocab.filter(v=>cat==="all"||v.cat===cat)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function setMode(mode){const cards=mode==="cards";$("cardsPanel").classList.toggle("hidden",!cards);$("matchPanel").classList.toggle("hidden",cards);$("tabCards").setAttribute("aria-selected",cards);$("tabMatch").setAttribute("aria-selected",!cards)}
+$("tabCards").onclick=()=>setMode("cards");$("tabMatch").onclick=()=>setMode("match");
+function loadDeck(){deck=filtered($("cardCategory").value);idx=0;shuffle(deck);renderCard()}
+function renderCard(){if(!deck.length)return;const v=deck[idx],rev=$("reverseCards").checked;$("flashcard").classList.remove("flipped");$("frontLabel").textContent=rev?"Русский":"Немецкий";$("backLabel").textContent=rev?"Немецкий":"Русский";$("frontWord").textContent=rev?v.ru:v.de;$("backWord").textContent=rev?v.de:v.ru;$("extraHint").textContent=v.cat==="nouns"?"Обратите внимание на артикль.":v.cat==="commands"?"Вежливая форма повелительного наклонения (Sie).":"Полезная фраза на уроке.";$("cardCounter").textContent=`Карточка ${idx+1} из ${deck.length}`}
+$("flashcard").onclick=()=> $("flashcard").classList.toggle("flipped");
+$("prevCard").onclick=()=>{idx=(idx-1+deck.length)%deck.length;renderCard()};
+$("nextCard").onclick=()=>{idx=(idx+1)%deck.length;renderCard()};
+$("shuffleCards").onclick=()=>{shuffle(deck);idx=0;renderCard()};
+$("cardCategory").onchange=loadDeck;$("reverseCards").onchange=renderCard;
+function newGame(){matchItems=shuffle([...filtered($("matchCategory").value)]).slice(0,Math.min(8,filtered($("matchCategory").value).length));selected=null;matched=new Set();mistakes=0;renderMatch()}
+function renderMatch(){$("germanCol").innerHTML="";$("russianCol").innerHTML="";const ruOrder=shuffle([...matchItems]);matchItems.forEach(v=>{const b=document.createElement("button");b.className="match-btn";b.textContent=v.de;b.dataset.de=v.de;b.onclick=()=>choose(b,v,"de");$("germanCol").appendChild(b)});ruOrder.forEach(v=>{const b=document.createElement("button");b.className="match-btn";b.textContent=v.ru;b.dataset.de=v.de;b.onclick=()=>choose(b,v,"ru");$("russianCol").appendChild(b)});updateMatch()}
+function choose(btn,v,side){if(matched.has(v.de))return;if(side==="de"){if(selected&&selected.side==="de"){selected.btn.classList.remove("selected")}selected={btn,v,side};btn.classList.add("selected");$("matchStatus").textContent="Теперь выберите перевод справа.";return}
+if(!selected){$("matchStatus").textContent="Сначала выберите немецкое слово слева.";return}
+if(selected.v.de===v.de){matched.add(v.de);selected.btn.classList.remove("selected");selected.btn.classList.add("matched");btn.classList.add("matched");selected=null;$("matchStatus").textContent=matched.size===matchItems.length?"Отлично! Все пары найдены 🎉":"Верно! Пара найдена."}else{mistakes++;btn.classList.add("wrong");selected.btn.classList.add("wrong");$("matchStatus").textContent="Пока не совпадает — попробуйте ещё раз.";setTimeout(()=>{btn.classList.remove("wrong");if(selected)selected.btn.classList.remove("wrong")},650)}updateMatch()}
+function updateMatch(){const total=matchItems.length;$("matchCounter").textContent=`Найдено пар: ${matched.size} из ${total} · Ошибок: ${mistakes}`;$("progressBar").style.width=(total?matched.size/total*100:0)+"%"}
+$("newMatch").onclick=newGame;$("matchCategory").onchange=newGame;
+loadDeck();newGame();
+</script>
+</body>
+</html>
